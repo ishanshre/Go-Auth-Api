@@ -1,0 +1,29 @@
+version: "3.9"
+services:
+  db:
+    image: postgres
+    container_name: goAuth
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_NAME=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - goAuth_data:/var/lib/postgresql/data
+    expose:
+      - 5432
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  goAuth_data:
+  pgadmin-data:

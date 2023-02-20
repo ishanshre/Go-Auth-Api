@@ -18,3 +18,4 @@
 vendor/
 main
 cmd/go-auth-api/main
+.env

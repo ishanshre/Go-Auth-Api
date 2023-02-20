@@ -11,4 +11,4 @@ dockerLog:
 	docker-compose logs
 
 goBuildR:
-	go cmd/go-auth-api/main.go && ./main
+	go build cmd/go-auth-api/main.go && ./main

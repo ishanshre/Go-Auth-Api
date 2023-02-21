@@ -2,10 +2,21 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/ishanshre/go-auth-api/api/v1/models"
 )
+
+func (s *ApiServer) handleCreateAndGetUser(w http.ResponseWriter, r *http.Request) error {
+	if r.Method == "GET" {
+		return s.handleGetUsers(w, r)
+	}
+	if r.Method == "POST" {
+		return s.handleCreateNewUser(w, r)
+	}
+	return fmt.Errorf("%s method not allowed", r.Method)
+}
 
 func (s *ApiServer) handleCreateNewUser(w http.ResponseWriter, r *http.Request) error {
 	req := new(models.User)
@@ -29,4 +40,12 @@ func (s *ApiServer) handleCreateNewUser(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 	return writeJSON(w, http.StatusCreated, ApiSuccess{Success: "account created successfully"})
+}
+
+func (s *ApiServer) handleGetUsers(w http.ResponseWriter, r *http.Request) error {
+	account, err := s.store.GetUsers()
+	if err != nil {
+		return err
+	}
+	return writeJSON(w, http.StatusOK, account)
 }

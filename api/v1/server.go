@@ -13,6 +13,7 @@ import (
 
 type Storage interface {
 	CreateUser(*models.User) error
+	GetUsers() ([]*models.User, error)
 }
 
 type PostgresStore struct {
@@ -90,4 +91,40 @@ func (s *PostgresStore) CreateUser(user *models.User) error {
 		return err
 	}
 	return nil
+}
+
+func (s *PostgresStore) GetUsers() ([]*models.User, error) {
+	query := `SELECT * FROM users`
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	users := []*models.User{}
+	for rows.Next() {
+		user, err := scanUsers(rows)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func scanUsers(rows *sql.Rows) (*models.User, error) {
+	user := new(models.User)
+	err := rows.Scan(
+		&user.ID,
+		&user.FirstName,
+		&user.LastName,
+		&user.Username,
+		&user.Email,
+		&user.Password,
+		&user.IsAdmin,
+		&user.IsActive,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.LastLogin,
+	)
+	return user, err
 }

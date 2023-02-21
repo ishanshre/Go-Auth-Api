@@ -63,5 +63,31 @@ func (s *PostgresStore) createUserTable() error {
 }
 
 func (s *PostgresStore) CreateUser(user *models.User) error {
+	query := `
+		INSERT INTO users (
+			first_name,
+			last_name,
+			username,
+			email,
+			password,
+			created_at,
+			updated_at,
+			last_login
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	`
+	_, err := s.db.Query(
+		query,
+		user.FirstName,
+		user.LastName,
+		user.Username,
+		user.Email,
+		user.Password,
+		user.CreatedAt,
+		user.UpdatedAt,
+		user.LastLogin,
+	)
+	if err != nil {
+		return err
+	}
 	return nil
 }

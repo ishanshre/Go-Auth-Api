@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	ID        int       `json:"id"`
@@ -14,4 +16,18 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	LastLogin time.Time `json:"last_login"`
+}
+
+func NewUser(firstName, lastName, username, email, password string) (*User, error) {
+
+	return &User{
+		FirstName: firstName,
+		LastName:  lastName,
+		Username:  username,
+		Email:     email,
+		Password:  password,
+		CreatedAt: time.Now().Local().UTC(),
+		UpdatedAt: time.Now().Local().UTC(),
+		LastLogin: time.Time{},
+	}, nil
 }

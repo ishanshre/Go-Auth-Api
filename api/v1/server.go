@@ -2,6 +2,7 @@ package v1
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 
@@ -14,6 +15,9 @@ import (
 type Storage interface {
 	CreateUser(*models.User) error
 	GetUsers() ([]*models.User, error)
+	GetUsersById(int) (*models.User, error)
+	DeleteUserById(int) error
+	UpdateUserById(int, *models.UpdateUser) error
 }
 
 type PostgresStore struct {
@@ -111,20 +115,57 @@ func (s *PostgresStore) GetUsers() ([]*models.User, error) {
 	return users, nil
 }
 
-func scanUsers(rows *sql.Rows) (*models.User, error) {
-	user := new(models.User)
-	err := rows.Scan(
-		&user.ID,
-		&user.FirstName,
-		&user.LastName,
-		&user.Username,
-		&user.Email,
-		&user.Password,
-		&user.IsAdmin,
-		&user.IsActive,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-		&user.LastLogin,
-	)
-	return user, err
+func (s *PostgresStore) GetUsersById(id int) (*models.User, error) {
+	query := `
+		SELECT * FROM users 
+		WHERE id = $1
+	`
+	rows, err := s.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		return scanUsers(rows)
+	}
+	return nil, fmt.Errorf("account with id %v not found", id)
+}
+
+func (s *PostgresStore) DeleteUserById(id int) error {
+	query := `
+		DELETE FROM users
+		WHERE id = $1
+	`
+	s.db.Exec("COMMIT")
+	rows, err := s.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	rows_affected, err := rows.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows_affected == 0 {
+		return fmt.Errorf("id %v does not exists", id)
+	}
+	return nil
+}
+func (s *PostgresStore) UpdateUserById(id int, user *models.UpdateUser) error {
+	query := `
+		UPDATE users
+		SET first_name = $2, last_name = $3
+		WHERE id =$1
+	`
+	s.db.Exec("COMMIT")
+	rows, err := s.db.Exec(query, id, user.FistName, user.LastName)
+	if err != nil {
+		return err
+	}
+	rows_affected, err := rows.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows_affected == 0 {
+		return fmt.Errorf("id %v does not exists", id)
+	}
+	return nil
 }

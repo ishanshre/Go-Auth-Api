@@ -18,6 +18,11 @@ type User struct {
 	LastLogin time.Time `json:"last_login"`
 }
 
+type UpdateUser struct {
+	FistName string `json:"first_name"`
+	LastName string `json:"last_name"`
+}
+
 func NewUser(firstName, lastName, username, email, password string) (*User, error) {
 
 	return &User{

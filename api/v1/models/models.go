@@ -23,6 +23,17 @@ type UpdateUser struct {
 	LastName string `json:"last_name"`
 }
 
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	ID           int    `json:"id"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 func NewUser(firstName, lastName, username, email, password string) (*User, error) {
 
 	return &User{

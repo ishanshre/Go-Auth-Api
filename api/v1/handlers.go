@@ -35,9 +35,9 @@ func (s *ApiServer) handleUserSignup(w http.ResponseWriter, r *http.Request) err
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			return err
 		}
-		// if err := validateCreateUser(req); err != nil {
-		// 	return err
-		// }
+		if err := validateCreateUser(req); err != nil {
+			return err
+		}
 		encPass, err := utils.HashedPassword(req.Password)
 		if err != nil {
 			return err

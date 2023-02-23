@@ -18,6 +18,11 @@ type User struct {
 	LastLogin time.Time `json:"last_login"`
 }
 
+type UserNhash struct {
+	ID       int    `json:"id"`
+	Password string `json:"password"`
+}
+
 type UpdateUser struct {
 	FistName string `json:"first_name"`
 	LastName string `json:"last_name"`

@@ -13,7 +13,8 @@ import (
 )
 
 type Storage interface {
-	CreateUser(*models.User) error
+	UserSignUp(*models.User) error
+	UserLogin(string) (*models.UserNhash, error)
 	GetUsers() ([]*models.User, error)
 	GetUsersById(int) (*models.User, error)
 	DeleteUserById(int) error
@@ -67,7 +68,7 @@ func (s *PostgresStore) createUserTable() error {
 	return nil
 }
 
-func (s *PostgresStore) CreateUser(user *models.User) error {
+func (s *PostgresStore) UserSignUp(user *models.User) error {
 	query := `
 		INSERT INTO users (
 			first_name,
@@ -168,4 +169,19 @@ func (s *PostgresStore) UpdateUserById(id int, user *models.UpdateUser) error {
 		return fmt.Errorf("id %v does not exists", id)
 	}
 	return nil
+}
+
+func (s *PostgresStore) UserLogin(username string) (*models.UserNhash, error) {
+	query := `
+		SELECT id, password FROM users
+		WHERE username = $1
+	`
+	rows, err := s.db.Query(query, username)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		return scanUser1(rows)
+	}
+	return nil, fmt.Errorf("username: %v not found", username)
 }

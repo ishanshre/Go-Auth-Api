@@ -21,7 +21,9 @@ func NewApiServer(listenAddr string, store Storage) *ApiServer {
 
 func (s *ApiServer) Run() {
 	router := mux.NewRouter()
-	router.HandleFunc("/v1/user", makeHttpHandler(s.handleCreateAndGetUser))
+	router.HandleFunc("/v1/user/auth/sign-up", makeHttpHandler(s.handleUserSignup))
+	router.HandleFunc("/v1/user/auth/login", makeHttpHandler(s.handleUserLogin))
+	router.HandleFunc("/v1/user", makeHttpHandler(s.handleGetUser))
 	router.HandleFunc("/v1/user/{id}", makeHttpHandler(s.handleUsersById))
 	log.Println("Starting server at ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)

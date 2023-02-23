@@ -51,3 +51,12 @@ func scanUsers(rows *sql.Rows) (*models.User, error) {
 	)
 	return user, err
 }
+
+func scanUser1(rows *sql.Rows) (*models.UserNhash, error) {
+	user := new(models.UserNhash)
+	err := rows.Scan(
+		&user.ID,
+		&user.Password,
+	)
+	return user, err
+}

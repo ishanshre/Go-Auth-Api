@@ -7,10 +7,12 @@ import (
 )
 
 func main() {
+	// initiates the new connection to the postgresql database
 	store, err := v1.NewPostgresStore()
 	if err != nil {
 		log.Fatalf("error in connecting to database: %s", err)
 	}
+	// runs the init method and creates table or if not exists
 	if err := store.Init(); err != nil {
 		log.Fatalf("Error in creating table: %s", err)
 	}

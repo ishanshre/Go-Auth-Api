@@ -56,7 +56,14 @@ func (s *ApiServer) handleAnyUpdateUserById(w http.ResponseWriter, r *http.Reque
 }
 
 func (s *ApiServer) handleAnyDeleteUserById(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	id, err := getId(r)
+	if err != nil {
+		return err
+	}
+	if err := s.store.AdminDeleteUserById(id); err != nil {
+		return err
+	}
+	return writeJSON(w, http.StatusOK, ApiSuccess{Success: "user deleted"})
 }
 func (s *ApiServer) handleUserSignup(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "POST" {
@@ -67,7 +74,6 @@ func (s *ApiServer) handleUserSignup(w http.ResponseWriter, r *http.Request) err
 		if err := validateCreateUser(req); err != nil {
 			return err
 		}
-		log.Println(req)
 		encPass, err := utils.HashedPassword(req.Password)
 		if err != nil {
 			return err

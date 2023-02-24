@@ -6,9 +6,9 @@ import (
 )
 
 func validateCreateUser(user *models.RegisterUser) error {
-	// if err := validators.ValidateUsername(user.Username); err != nil {
-	// 	return err
-	// }
+	if err := validators.ValidateUsername(user.Username); err != nil {
+		return err
+	}
 	// if err := validators.ValidatePassword(user.Password); err != nil {
 	// 	return err
 	// }

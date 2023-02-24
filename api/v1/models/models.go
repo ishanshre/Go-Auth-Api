@@ -17,6 +17,8 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	LastLogin time.Time `json:"last_login"`
 }
+
+// for regestering new users
 type RegisterUser struct {
 	ID        int       `json:"id"`
 	FirstName string    `json:"first_name"`
@@ -31,6 +33,7 @@ type RegisterUser struct {
 	LastLogin time.Time `json:"last_login"`
 }
 
+// for admin user
 type AdminUpdateUser struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`

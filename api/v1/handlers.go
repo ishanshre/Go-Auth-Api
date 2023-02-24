@@ -6,14 +6,12 @@ import (
 	"net/http"
 
 	"github.com/ishanshre/go-auth-api/api/v1/models"
+	"github.com/ishanshre/go-auth-api/internals/pkg/utils"
 )
 
-func (s *ApiServer) handleCreateAndGetUser(w http.ResponseWriter, r *http.Request) error {
+func (s *ApiServer) handleGetUser(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "GET" {
 		return s.handleGetUsers(w, r)
-	}
-	if r.Method == "POST" {
-		return s.handleCreateNewUser(w, r)
 	}
 	return fmt.Errorf("%s method not allowed", r.Method)
 }
@@ -31,28 +29,57 @@ func (s *ApiServer) handleUsersById(w http.ResponseWriter, r *http.Request) erro
 	return fmt.Errorf("%s method not allowed", r.Method)
 }
 
-func (s *ApiServer) handleCreateNewUser(w http.ResponseWriter, r *http.Request) error {
-	req := new(models.User)
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return err
+func (s *ApiServer) handleUserSignup(w http.ResponseWriter, r *http.Request) error {
+	if r.Method == "POST" {
+		req := new(models.User)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			return err
+		}
+		if err := validateCreateUser(req); err != nil {
+			return err
+		}
+		encPass, err := utils.HashedPassword(req.Password)
+		if err != nil {
+			return err
+		}
+		user, err := models.NewUser(
+			req.FirstName,
+			req.LastName,
+			req.Username,
+			req.Email,
+			encPass,
+		)
+		if err != nil {
+			return err
+		}
+		if err := s.store.UserSignUp(user); err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusCreated, ApiSuccess{Success: "account created successfully"})
 	}
-	if err := validateCreateUser(req); err != nil {
-		return err
+	return fmt.Errorf("%s method not allowed", r.Method)
+}
+
+func (s *ApiServer) handleUserLogin(w http.ResponseWriter, r *http.Request) error {
+	if r.Method == "POST" {
+		req := new(models.LoginRequest)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			return err
+		}
+		user, err := s.store.UserLogin(req.Username)
+		if err != nil {
+			return err
+		}
+		if err := utils.VerifyPassword(user.Password, req.Password); err != nil {
+			return err
+		}
+		res, err := utils.GenerateToken(user.ID)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusOK, res)
 	}
-	user, err := models.NewUser(
-		req.FirstName,
-		req.LastName,
-		req.Username,
-		req.Email,
-		req.Password,
-	)
-	if err != nil {
-		return err
-	}
-	if err := s.store.CreateUser(user); err != nil {
-		return err
-	}
-	return writeJSON(w, http.StatusCreated, ApiSuccess{Success: "account created successfully"})
+	return fmt.Errorf("%s method not allowed", r.Method)
 }
 
 func (s *ApiServer) handleGetUsers(w http.ResponseWriter, r *http.Request) error {

@@ -4,11 +4,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/ishanshre/go-auth-api/api/v1/models"
+	"github.com/ishanshre/go-auth-api/internals/pkg/utils"
 )
 
 func makeHttpHandler(f ApiFunc) http.HandlerFunc {
@@ -50,4 +52,37 @@ func scanUsers(rows *sql.Rows) (*models.User, error) {
 		&user.LastLogin,
 	)
 	return user, err
+}
+
+func scanUser1(rows *sql.Rows) (*models.UserNhash, error) {
+	user := new(models.UserNhash)
+	err := rows.Scan(
+		&user.ID,
+		&user.Password,
+	)
+	return user, err
+}
+
+func jwtAuthHandler(handlerFunc http.HandlerFunc, s Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Calling auth middleware")
+		userId, err := utils.ExtractTokenMetaData(r)
+		if err != nil {
+			log.Println(err)
+			permissionDenied(w)
+			return
+		}
+		account, err := s.GetUsersById(userId.ID)
+		if err != nil {
+			log.Println(err)
+			permissionDenied(w)
+			return
+		}
+		if err := utils.VerifyUser(account.ID, r); err != nil {
+			log.Println(err)
+			permissionDenied(w)
+			return
+		}
+		handlerFunc(w, r)
+	}
 }

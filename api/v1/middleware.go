@@ -83,6 +83,44 @@ func jwtAuthHandler(handlerFunc http.HandlerFunc, s Storage) http.HandlerFunc {
 			permissionDenied(w)
 			return
 		}
+		paramId, err := getId(r)
+		if err != nil {
+			invalidParams(w)
+			return
+		}
+		if paramId != account.ID {
+			permissionDenied(w)
+			return
+		}
+		handlerFunc(w, r)
+	}
+}
+
+func jwtAuthAdminHandler(handlerFunc http.HandlerFunc, s Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Calling auth middleware")
+		userId, err := utils.ExtractTokenMetaData(r)
+		if err != nil {
+			log.Println(err)
+			permissionDenied(w)
+			return
+		}
+		account, err := s.GetUsersById(userId.ID)
+		if err != nil {
+			log.Println(err)
+			permissionDenied(w)
+			return
+		}
+		if err := utils.VerifyUser(account.ID, r); err != nil {
+			log.Println(err)
+			permissionDenied(w)
+			return
+		}
+		if account.IsAdmin == "false" {
+			log.Println("permission denied, not a admin user")
+			permissionDenied(w)
+			return
+		}
 		handlerFunc(w, r)
 	}
 }

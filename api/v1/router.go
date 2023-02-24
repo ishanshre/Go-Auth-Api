@@ -24,7 +24,7 @@ func (s *ApiServer) Run() {
 	router.HandleFunc("/v1/user/auth/sign-up", makeHttpHandler(s.handleUserSignup))
 	router.HandleFunc("/v1/user/auth/login", makeHttpHandler(s.handleUserLogin))
 	router.HandleFunc("/v1/user", makeHttpHandler(s.handleGetUser))
-	router.HandleFunc("/v1/user/{id}", makeHttpHandler(s.handleUsersById))
+	router.HandleFunc("/v1/user/{id}", jwtAuthHandler(makeHttpHandler(s.handleUsersById), s.store))
 	log.Println("Starting server at ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)
 }

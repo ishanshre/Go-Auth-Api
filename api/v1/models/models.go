@@ -10,7 +10,7 @@ type User struct {
 	LastName  string    `json:"last_name"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
-	Password  string    `json:"password"`
+	Password  string    `json:"-"`
 	IsAdmin   string    `json:"is_admin"`
 	IsActive  string    `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
@@ -37,6 +37,10 @@ type LoginResponse struct {
 	ID           int    `json:"id"`
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+type TokenMetaData struct {
+	ID int `json:"id"`
 }
 
 func NewUser(firstName, lastName, username, email, password string) (*User, error) {

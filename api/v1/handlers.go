@@ -3,11 +3,22 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/ishanshre/go-auth-api/api/v1/models"
 	"github.com/ishanshre/go-auth-api/internals/pkg/utils"
 )
+
+func (s *ApiServer) handleAdminUserById(w http.ResponseWriter, r *http.Request) error {
+	if r.Method == "PUT" {
+		return s.handleAnyUpdateUserById(w, r)
+	}
+	if r.Method == "DELETE" {
+		return s.handleAnyDeleteUserById(w, r)
+	}
+	return fmt.Errorf("%s method not allowed", r.Method)
+}
 
 func (s *ApiServer) handleGetUser(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "GET" {
@@ -29,9 +40,34 @@ func (s *ApiServer) handleUsersById(w http.ResponseWriter, r *http.Request) erro
 	return fmt.Errorf("%s method not allowed", r.Method)
 }
 
+func (s *ApiServer) handleAnyUpdateUserById(w http.ResponseWriter, r *http.Request) error {
+	req := new(models.AdminUpdateUser)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+	id, err := getId(r)
+	if err != nil {
+		return err
+	}
+	if err := s.store.AdminUpdateUserById(id, req); err != nil {
+		return err
+	}
+	return writeJSON(w, http.StatusOK, ApiSuccess{Success: "update user successful"})
+}
+
+func (s *ApiServer) handleAnyDeleteUserById(w http.ResponseWriter, r *http.Request) error {
+	id, err := getId(r)
+	if err != nil {
+		return err
+	}
+	if err := s.store.AdminDeleteUserById(id); err != nil {
+		return err
+	}
+	return writeJSON(w, http.StatusOK, ApiSuccess{Success: "user deleted"})
+}
 func (s *ApiServer) handleUserSignup(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "POST" {
-		req := new(models.User)
+		req := new(models.RegisterUser)
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			return err
 		}
@@ -42,7 +78,7 @@ func (s *ApiServer) handleUserSignup(w http.ResponseWriter, r *http.Request) err
 		if err != nil {
 			return err
 		}
-		user, err := models.NewUser(
+		user, err := models.RegisterNewUser(
 			req.FirstName,
 			req.LastName,
 			req.Username,
@@ -71,10 +107,14 @@ func (s *ApiServer) handleUserLogin(w http.ResponseWriter, r *http.Request) erro
 			return err
 		}
 		if err := utils.VerifyPassword(user.Password, req.Password); err != nil {
+			log.Println(err)
 			return err
 		}
 		res, err := utils.GenerateToken(user.ID)
 		if err != nil {
+			return err
+		}
+		if err := s.store.UpdateLastLogin(res.ID); err != nil {
 			return err
 		}
 		return writeJSON(w, http.StatusOK, res)

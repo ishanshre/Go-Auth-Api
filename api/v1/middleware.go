@@ -14,6 +14,9 @@ import (
 )
 
 func makeHttpHandler(f ApiFunc) http.HandlerFunc {
+	/*
+		Middleware that returns http HandlerFunc
+	*/
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(w, r); err != nil {
 			writeJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
@@ -22,12 +25,18 @@ func makeHttpHandler(f ApiFunc) http.HandlerFunc {
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) error {
+	/*
+		Middleware that write the response to the client
+	*/
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	return json.NewEncoder(w).Encode(v)
 }
 
 func getId(r *http.Request) (int, error) {
+	/*
+		Middlere that parse the id in url params into interger
+	*/
 	idStr := mux.Vars(r)["id"]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -37,6 +46,9 @@ func getId(r *http.Request) (int, error) {
 }
 
 func scanUsers(rows *sql.Rows) (*models.User, error) {
+	/*
+		A middleware that scan the values in record and store in another variable
+	*/
 	user := new(models.User)
 	err := rows.Scan(
 		&user.ID,
@@ -64,6 +76,9 @@ func scanUser1(rows *sql.Rows) (*models.UserNhash, error) {
 }
 
 func jwtAuthHandler(handlerFunc http.HandlerFunc, s Storage) http.HandlerFunc {
+	/*
+		Authentication middleware that handles the authorizations
+	*/
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Calling auth middleware")
 		userId, err := utils.ExtractTokenMetaData(r)
@@ -97,6 +112,9 @@ func jwtAuthHandler(handlerFunc http.HandlerFunc, s Storage) http.HandlerFunc {
 }
 
 func jwtAuthAdminHandler(handlerFunc http.HandlerFunc, s Storage) http.HandlerFunc {
+	/*
+		Authorization Handler for admin
+	*/
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Calling auth middleware")
 		userId, err := utils.ExtractTokenMetaData(r)

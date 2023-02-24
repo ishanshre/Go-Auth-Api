@@ -13,6 +13,9 @@ import (
 )
 
 func GenerateToken(id int) (*models.LoginResponse, error) {
+	/*
+		Used for generating the access and refresh token
+	*/
 	access_claims := &jwt.MapClaims{
 		"ExpiresAt": jwt.NewNumericDate(time.Now().Add(time.Minute * 15)).Unix(),
 		"IssuedAT":  jwt.NewNumericDate(time.Now()),
@@ -42,6 +45,9 @@ func GenerateToken(id int) (*models.LoginResponse, error) {
 }
 
 func ExtractToken(r *http.Request) (string, error) {
+	/*
+		This method extracts the token from the request header
+	*/
 	bearerToken := r.Header.Get("Authorization")
 	tokenString := strings.Split(bearerToken, " ")
 	if len(tokenString) == 2 {
@@ -51,6 +57,9 @@ func ExtractToken(r *http.Request) (string, error) {
 }
 
 func VerifyToken(r *http.Request) (*jwt.Token, error) {
+	/*
+		This method is used for verifying the token is expired or not
+	*/
 	secret := os.Getenv("JWT_SECRET")
 	tokenString, err := ExtractToken(r)
 	if err != nil {
@@ -69,6 +78,9 @@ func VerifyToken(r *http.Request) (*jwt.Token, error) {
 }
 
 func TokenValid(r *http.Request) (jwt.MapClaims, error) {
+	/*
+		Checks if token is valid or not
+	*/
 	token, err := VerifyToken(r)
 	if err != nil {
 		return nil, err
@@ -81,6 +93,9 @@ func TokenValid(r *http.Request) (jwt.MapClaims, error) {
 }
 
 func ExtractTokenMetaData(r *http.Request) (*models.TokenMetaData, error) {
+	/*
+		Extract the information added about the user in the token
+	*/
 	claims, err := TokenValid(r)
 	if err != nil {
 		return nil, err
@@ -93,6 +108,9 @@ func ExtractTokenMetaData(r *http.Request) (*models.TokenMetaData, error) {
 }
 
 func VerifyUser(id int, r *http.Request) error {
+	/*
+		Used to verify the user id and id from token matches or not
+	*/
 	claims, err := TokenValid(r)
 	if err != nil {
 		return err

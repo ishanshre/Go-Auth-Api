@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/ishanshre/go-auth-api/api/v1/models"
 	_ "github.com/lib/pq"
@@ -13,12 +14,15 @@ import (
 )
 
 type Storage interface {
-	UserSignUp(*models.User) error
+	UserSignUp(*models.RegisterUser) error
 	UserLogin(string) (*models.UserNhash, error)
+	AdminUpdateUserById(int, *models.AdminUpdateUser) error
+	AdminDeleteUserById(int) error
 	GetUsers() ([]*models.User, error)
 	GetUsersById(int) (*models.User, error)
 	DeleteUserById(int) error
 	UpdateUserById(int, *models.UpdateUser) error
+	UpdateLastLogin(int) error
 }
 
 type PostgresStore struct {
@@ -68,7 +72,7 @@ func (s *PostgresStore) createUserTable() error {
 	return nil
 }
 
-func (s *PostgresStore) UserSignUp(user *models.User) error {
+func (s *PostgresStore) UserSignUp(user *models.RegisterUser) error {
 	query := `
 		INSERT INTO users (
 			first_name,
@@ -184,4 +188,40 @@ func (s *PostgresStore) UserLogin(username string) (*models.UserNhash, error) {
 		return scanUser1(rows)
 	}
 	return nil, fmt.Errorf("username: %v not found", username)
+}
+
+func (s *PostgresStore) UpdateLastLogin(id int) error {
+	query := `
+		UPDATE users 
+		SET last_login = $2
+		WHERE id = $1
+	`
+	s.db.Exec("COMMIT")
+	_, err := s.db.Query(query, id, time.Now())
+	return err
+}
+
+func (s *PostgresStore) AdminUpdateUserById(id int, user *models.AdminUpdateUser) error {
+	query := `
+		UDPATE users 
+		SET first_name = $2, last_name= $3, is_admin = $4, is_active =$5, updated_at = $6
+		WHERE id = $1
+	`
+	s.db.Exec("COMMIT")
+	rows, err := s.db.Exec(query, id, user.FirstName, user.LastName, user.IsAdmin, user.IsActive, time.Now())
+	if err != nil {
+		return err
+	}
+	rows_affected, err := rows.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows_affected == 0 {
+		return fmt.Errorf("id %v does not exists", id)
+	}
+	return nil
+}
+
+func (s *PostgresStore) AdminDeleteUserById(id int) error {
+	return nil
 }

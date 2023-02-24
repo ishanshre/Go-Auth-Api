@@ -13,3 +13,6 @@ DB_PASSWORD = "password"
 
 JWT_SECRET = "secretkey"
 ```
+
+## Project Structure
+[project structure](./go-auth-api-structure.png)
